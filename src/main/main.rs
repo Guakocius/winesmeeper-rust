@@ -3,6 +3,7 @@ use std::thread;
 use color_eyre::Result;
 
 mod observer;
+mod controller;
 mod view;
 mod model;
 

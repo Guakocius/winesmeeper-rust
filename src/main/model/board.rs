@@ -25,7 +25,7 @@ impl Board {
 
             let max_bombs = Self::max_bombs(width, height, start_x, start_y);
             if bomb_count == 0 || bomb_count > max_bombs {
-                return Err(format!("bomb count must be between 1 {}", max_bombs));
+                return Err(format!("bomb count must be between 1 and {}", max_bombs));
             }
 
             let mut board = vec![

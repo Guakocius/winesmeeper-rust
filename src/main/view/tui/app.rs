@@ -13,8 +13,9 @@ use color_eyre::{
     Result,
 };
 
-use crate::Tui;
+use crate::{Tui, controller::commands::{SYSTEM_COMMANDS, TURN_COMMANDS}};
 use crate::model::board::Board;
+use crate::controller::commands::Command;
 
 #[derive(Debug)]
 pub struct App {
@@ -82,11 +83,19 @@ impl App {
     }
 
     fn show_help_message(&mut self) {
+        let title = Line::from(" Help: Prints an overview of all System and Turn Commands");
+        let system_commands = Command::render_commands(SYSTEM_COMMANDS);
+        let turn_commands = Command::render_commands(TURN_COMMANDS);
+
+        let sys_rec = Rect::new(0, 0, self.board.width as u16 / 2, self.board.height as u16 / 2);
+        let turn_rec = Rect::new(self.board.width as u16 / 2, self.board.height as u16 / 2, self.board.width as u16 / 2, self.board.height as u16 / 2);
+
+        let sys_block = Block::bordered()
+            .title(title);
+        
 
     }
-    /*fn generate_board(&mut self) -> Board {
-        Board::default()
-    }*/
+
     fn generate_board(&mut self) {
 
     }
@@ -126,7 +135,6 @@ impl Default for App {
 impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let title = Line::from(" Winesmeeper - A Minesweeper Saga ".bold());
-
         let sys_commands = Line::from(vec![
             " Help ".into(),
             "<H> ".blue().bold(),
@@ -170,34 +178,48 @@ mod tests {
     use super::*;
     use ratatui::style::Style;
 
+    fn buffer_to_string(buf: &Buffer) -> Vec<String> {
+        let Rect { width, height, .. } = buf.area;
+        (0..height)
+            .map(|y| {
+                (0..width)
+                    .map(|x| buf.get(x, y).symbol())
+                        .collect::<String>()
+            })
+            .collect()
+    }
+
     #[test]
     fn render() {
         let app = App::default();
-        let mut buf = Buffer::empty(Rect::new(0, 0, 50, 4));
+
+
+        let mut expected = Buffer::with_lines(vec![
+            "┏━━━━ Winesmeeper - A Minesweeper Saga ━ Help <H>  Generate <G>  Redo <R>  Undo <U>  Save <S>  Load <L>  Quit <Q> ━━━━━┓",
+            "┃                                                      ■■■■■■■■■■                                                      ┃",
+            "┃                                                      ■■■■■■■■■■                                                      ┃",
+            "┃                                                      ■■■■■■■■■■                                                      ┃",
+            "┃                                                      ■■■■■■■■■■                                                      ┃",
+            "┃                                                      ■■■■■■■■■■                                                      ┃",
+            "┃                                                      ■■■■■■■■■■                                                      ┃",
+            "┃                                                      ■■■■■■■■■■                                                      ┃",
+            "┃                                                      ■■■■■■■■■■                                                      ┃",
+            "┃                                                      ■■■■■■■■■■                                                      ┃",
+            "┃                                                      ■■■■■■■■■■                                                      ┃",
+            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Flag <F>  Open Field <O> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛",
+        ]);
+
+        let mut buf = Buffer::empty(Rect::new(0, 0, expected.area.width, expected.area.height));
 
         app.render(buf.area, &mut buf);
 
-        let mut expected = Buffer::with_lines(vec![
-            "┏━━━━━━━━━━━━━ Counter App Tutorial ━━━━━━━━━━━━━┓",
-            "┃                    Value: 0                    ┃",
-            "┃                                                ┃",
-            "┗━ Decrement <Left> Increment <Right> Quit <Q> ━━┛",
-        ]);
-        let title_style = Style::new().bold();
-        let counter_style = Style::new().yellow();
-        let key_style = Style::new().blue().bold();
-        expected.set_style(Rect::new(14, 0, 22, 1), title_style);
-        expected.set_style(Rect::new(28, 1, 1, 1), counter_style);
-        expected.set_style(Rect::new(13, 3, 6, 1), key_style);
-        expected.set_style(Rect::new(30, 3, 7, 1), key_style);
-        expected.set_style(Rect::new(43, 3, 4, 1), key_style);
-
-        assert_eq!(buf, expected);
+        assert_eq!(buffer_to_string(&buf), buffer_to_string(&expected));
     }
 
     #[test]
     fn handle_key_event() {
         let mut app = App::default();
+        /*
         app.handle_key_event(KeyCode::Right.into()).unwrap();
         //assert_eq!(app.counter, 1);
 
@@ -205,27 +227,8 @@ mod tests {
         //assert_eq!(app.counter, 0);
 
         let mut app = App::default();
-        app.handle_key_event(KeyCode::Char('q').into()).unwrap();
+        app.handle_key_event(KeyCode::Char('q').into()).unwrap();*/
+
         assert!(app.exit);
-    }
-
-    #[test]
-    #[should_panic(expected = "attempt to subtract with overflow")]
-    fn handle_key_event_panic() {
-        let mut app = App::default();
-        let _ = app.handle_key_event(KeyCode::Left.into());
-    }
-
-    #[test]
-    fn handle_key_event_overflow() {
-        let mut app = App::default();
-        assert!(app.handle_key_event(KeyCode::Right.into()).is_ok());
-        assert!(app.handle_key_event(KeyCode::Right.into()).is_ok());
-        assert_eq!(
-            app.handle_key_event(KeyCode::Right.into())
-                .unwrap_err()
-                .to_string(),
-            "counter overflow"
-        );
     }
 }
