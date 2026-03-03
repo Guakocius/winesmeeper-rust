@@ -1,11 +1,12 @@
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
+use ratatui::prelude::*;
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::Stylize,
     symbols::border,
     text::{Line, Text, Span},
-    widgets::{Block, Paragraph, Widget},
+    widgets::{Block, Paragraph, Widget, Clear, Wrap},
     Frame,
 };
 use color_eyre::{
@@ -15,12 +16,25 @@ use color_eyre::{
 
 use crate::{Tui, controller::commands::{SYSTEM_COMMANDS, TURN_COMMANDS}};
 use crate::model::board::Board;
-use crate::controller::commands::Command;
+use crate::controller::commands::{self, Command};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Overlay {
+    Help,
+    Generate,
+    Redo,
+    Undo,
+    Save,
+    Load,
+    Flag,
+    Open
+}
 
 #[derive(Debug)]
 pub struct App {
     pub board: Board,
     pub exit: bool,
+    pub overlay: Option<Overlay>,
 }
 
 impl App {
@@ -59,6 +73,35 @@ impl App {
         frame.render_widget(self, frame.area());
     }
 
+    fn draw_overlay(&self, frame: &mut Frame) {
+        let Some(overlay) = self.overlay else { return };
+
+        let area = App::centered_rect(60, 70, frame.area());
+
+        frame.render_widget(Clear, area);
+
+        match overlay {
+            Overlay::Help => {
+                let paragraph = Paragraph::new(App::help_text())
+                    .block(
+                        Block::bordered()
+                            .title("An overview of all System and Turn Commands")
+                            .border_set(border::THICK),
+                    )
+                    .wrap(Wrap { trim: false });
+                frame.render_widget(paragraph, area);
+            },
+            Overlay::Generate => (),
+            Overlay::Redo => (),
+            Overlay::Undo => (),
+            Overlay::Save => (),
+            Overlay::Load => (),
+            Overlay::Flag => (),
+            Overlay::Open => (),
+            _ => ()
+        }
+    }
+
     fn handle_events(&mut self) -> Result<()> {
         match event::read()? {
             Event::Key(key_event) if key_event.kind == KeyEventKind::Press => self
@@ -81,28 +124,21 @@ impl App {
         }
         Ok(())
     }
-
+    
     fn show_help_message(&mut self) {
-        let title = Line::from(" Help: Prints an overview of all System and Turn Commands");
-        let system_commands = Command::render_commands(SYSTEM_COMMANDS);
-        let turn_commands = Command::render_commands(TURN_COMMANDS);
-
-        let sys_rec = Rect::new(0, 0, self.board.width as u16 / 2, self.board.height as u16 / 2);
-        let turn_rec = Rect::new(self.board.width as u16 / 2, self.board.height as u16 / 2, self.board.width as u16 / 2, self.board.height as u16 / 2);
-
-        let sys_block = Block::bordered()
-            .title(title);
-        
-
+        self.overlay = Some(Overlay::Help);
     }
 
     fn generate_board(&mut self) {
+        self.overlay = Some(Overlay::Generate);
 
     }
     fn redo(&mut self) {
+        self.overlay = Some(Overlay::Redo);
 
     }
     fn undo(&mut self) {
+        self.overlay = Some(Overlay::Undo);
 
     }
     fn save_game(&mut self) {
@@ -114,6 +150,39 @@ impl App {
 
     fn exit(&mut self) {
         self.exit = true;
+    }
+
+    fn help_text() -> Text<'static> {
+        let mut lines = Vec::new();
+
+        lines.extend(Command::render_commands("SYSTEM COMMANDS", SYSTEM_COMMANDS));
+
+        lines.push(Line::raw(""));
+        lines.push(Line::raw(""));
+
+        lines.extend(Command::render_commands("TURN COMMANDS", TURN_COMMANDS));
+
+        Text::from(lines)
+    }
+
+    fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+        let popup_layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ])
+            .split(r);
+
+        Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([
+                    Constraint::Percentage((100 - percent_x) / 2),
+                    Constraint::Percentage(percent_x),
+                    Constraint::Percentage((100 - percent_x) / 2),
+                ])
+                .split(popup_layout[1])[1]
     }
 }
 
@@ -128,6 +197,7 @@ impl Default for App {
         Self {
             board,
             exit: false,
+            overlay: None,
         }
     }
 }
@@ -163,6 +233,7 @@ impl Widget for &App {
             .title_top(sys_commands.centered())
             .title_bottom(turn_commands.centered())
             .border_set(border::THICK);
+            
 
         let board = self.board_to_text();
 
@@ -220,14 +291,9 @@ mod tests {
     fn handle_key_event() {
         let mut app = App::default();
         /*
-        app.handle_key_event(KeyCode::Right.into()).unwrap();
-        //assert_eq!(app.counter, 1);
-
-        app.handle_key_event(KeyCode::Left.into()).unwrap();
-        //assert_eq!(app.counter, 0);
-
         let mut app = App::default();
-        app.handle_key_event(KeyCode::Char('q').into()).unwrap();*/
+        app.handle_key_event(KeyCode::Char('q').into()).unwrap();
+        */
 
         assert!(app.exit);
     }

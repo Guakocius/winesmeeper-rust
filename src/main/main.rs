@@ -2,15 +2,20 @@ use std::thread;
 
 use color_eyre::Result;
 
+use observer::Event;
+
+
 mod observer;
 mod controller;
 mod view;
 mod model;
+mod game;
 
 use crate::view::tui::app::App;
 use crate::view::tui::terminal::Tui;
 
 fn main() -> Result<()> {
+    // TODO: Fully implement Observer pattern
     color_eyre::install()?;
 
     let handle = thread::spawn(|| -> Result<()> {

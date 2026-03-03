@@ -79,13 +79,13 @@ impl Board {
             })
             .count()
     }
-    fn get_field(&self, x: isize, y: isize) -> i32 {
+    pub fn get_field(&self, x: usize, y: usize) -> i32 {
         let field = &self.board[x as usize][y as usize];
         match field {
             Field { is_flag: true, .. } => -3,
             Field { is_opened: false, .. } => -1,
             Field { is_bomb: true, .. } => -2,
-            _ => self.get_bomb_neighbor(x, y) as i32
+            _ => self.get_bomb_neighbor(x as isize, y as isize) as i32
         }
     }
     fn is_victory(&self) -> bool {

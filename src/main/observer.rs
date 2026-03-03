@@ -1,35 +1,63 @@
 use std::collections::HashMap;
 
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub enum Event {
-    Load,
-    Save,
+    Turn,
+    FieldOpened,
+    FlagPlaced,
+    GameWon,
+    GameLost,
 }
 
-pub type Subscriber = fn();
+#[derive(Clone)]
+pub enum EventData {
+    Turn { x: usize, y: usize },
+    FieldOpened { x: usize, y: usize, bomb: bool},
+    FlagPlaced { x: usize, y: usize },
+    GameWon,
+    GameLost,
+}
 
-#[derive(Default)]
+type ObserverId = usize;
+
 pub struct Observer {
-    events: HashMap<Event, Vec<Subscriber>>,
+    next_id: ObserverId,
+    listeners: HashMap<Event, Vec<(ObserverId, Box<dyn FnMut(&EventData)>)>>,
 }
 
 impl Observer {
-    pub fn subscribe(&mut self, event_type: Event, listener: Subscriber) {
-        self.events.entry(event_type.clone()).or_default();
-        self.events.get_mut(&event_type).unwrap().push(listener);
+    pub fn new() -> Self {
+        Self {
+            next_id: 0,
+            listeners: HashMap::new(),
+        }
     }
 
-    pub fn unsubscribe(&mut self, event_type: Event, listener: Subscriber) {
-        self.events
-            .get_mut(&event_type)
-            .unwrap()
-            .retain(|&s| s != listener);
+    pub fn subscribe<F>(&mut self, event_type: Event, callback: F) -> ObserverId
+    where 
+        F: FnMut(&EventData) + 'static,
+    {
+        let id = self.next_id;
+        self.next_id += 1;
+        
+        self.listeners
+            .entry(event_type)
+            .or_default()
+            .push((id, Box::new(callback)));
+        id
     }
 
-    pub fn notify(&self, event_type: Event) {
-        let listeners = self.events.get(&event_type).unwrap();
-        for listener in listeners {
-            //listener
+    pub fn unsubscribe(&mut self, event_type: &Event, id: ObserverId) {
+        if let Some(listeners) = self.listeners.get_mut(event_type) {
+            listeners.retain(|(listener_id, _)| *listener_id != id);
+        }
+    }
+
+    pub fn notify(&mut self, event_type: &Event, data: EventData) {
+        if let Some(listeners) = self.listeners.get_mut(event_type) {
+            for (_, listener) in listeners {
+                listener(&data);
+            }
         }
     }
 }
