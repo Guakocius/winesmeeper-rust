@@ -10,6 +10,9 @@ pub struct Board {
     pub board: Vec<Vec<Field>>,
     pub width: usize,
     pub height: usize,
+    pub start_x: usize,
+    pub start_y: usize,
+    pub bomb_count: usize,
 }
 
 impl Board {
@@ -45,7 +48,10 @@ impl Board {
             Ok(Self {
                 board,
                 width,
-                height
+                height,
+                start_x,
+                start_y,
+                bomb_count
             })
         }
     fn max_bombs(width: usize, height: usize, x: usize, y: usize) -> usize {
@@ -128,8 +134,25 @@ impl Board {
 
         let height = board.len();
         let width = board.first().map(|r| r.len()).unwrap_or(0);
+        let start_x = board_elem
+            .attributes
+            .get("start_x")
+            .ok_or_else(|| anyhow!("missing start_x"))?
+            .parse()?;
 
-        Ok(Board { board, height, width })
+        let start_y = board_elem
+            .attributes
+            .get("start_y")
+            .ok_or_else(|| anyhow!("missing start_y"))?
+            .parse()?;
+
+        let bomb_count = board_elem
+            .attributes
+            .get("bomb_count")
+            .ok_or_else(|| anyhow!("missing bomb_count"))?
+            .parse()?; 
+
+        Ok(Board { board, height, width, start_x, start_y, bomb_count })
     }
     fn place_bombs(board: &mut [Vec<Field>], start_x: usize,
         start_y: usize, bomb_count: usize) {
