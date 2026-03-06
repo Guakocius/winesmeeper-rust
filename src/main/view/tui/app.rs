@@ -467,25 +467,53 @@ mod tests {
     fn render() {
         let app = App::default();
 
+        let vertical = Layout::vertical([
+            Constraint::Length(1),
+            Constraint::Length(3),
+            Constraint::Min(1),
+        ]);
 
-        let mut expected = Buffer::with_lines(vec![
-            "┏━━━━ Winesmeeper - A Minesweeper Saga ━ Help <H>  Generate <G>  Redo <R>  Undo <U>  Save <S>  Load <L>  Quit <Q> ━━━━━┓",
-            "┃                                                      ■■■■■■■■■■                                                      ┃",
-            "┃                                                      ■■■■■■■■■■                                                      ┃",
-            "┃                                                      ■■■■■■■■■■                                                      ┃",
-            "┃                                                      ■■■■■■■■■■                                                      ┃",
-            "┃                                                      ■■■■■■■■■■                                                      ┃",
-            "┃                                                      ■■■■■■■■■■                                                      ┃",
-            "┃                                                      ■■■■■■■■■■                                                      ┃",
-            "┃                                                      ■■■■■■■■■■                                                      ┃",
-            "┃                                                      ■■■■■■■■■■                                                      ┃",
-            "┃                                                      ■■■■■■■■■■                                                      ┃",
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ Flag <F>  Open Field <O> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛",
+        let area = Rect::new(0, 0, 80, 24);
+
+        let [help_area, input_area, board_area] = vertical.areas(area);
+        
+        let cmds = Line::from(vec![
+                    " Help ".into(),
+                    "<H> ".blue().bold(),
+                    " Generate ".into(),
+                    "<G> ".blue().bold(),
+                    " Redo ".into(),
+                    "<R> ".blue().bold(),
+                    " Undo ".into(),
+                    "<U> ".blue().bold(),
+                    " Save ".into(),
+                    "<S> ".blue().bold(),
+                    " Load ".into(),
+                    "<L> ".blue().bold(),
+                    " Quit ".into(),
+                    "<Q> ".blue().bold(),
+                    " Flag ".into(),
+                    "<F> ".blue().bold(),
+                    " Open Field ".into(),
+                    "<O> ".blue().bold(),
+            ]);
+
+        let input = Paragraph::new("")
+            .style(Style::default())
+            .block(Block::bordered().title("Input"));
+
+
+        let help = Paragraph::new(cmds);  
+
+        let expected = Buffer::with_lines(vec![
+            " Help <H>  Generate <G>  Redo <R>  Undo <U>  Save <S>  Load <L>  Quit <Q>  Flag                                         ", "┌Input─────────────────────────────────────────────────────────────────────────┐                                        ", "│                                                                              │                                        ", "└──────────────────────────────────────────────────────────────────────────────┘                                        ", "┏━━━━━━━━━━━━━━━━━━━━━━ Winesmeeper - A Minesweeper Saga ━━━━━━━━━━━━━━━━━━━━━━┓                                        ", "┃                                  ■■■■■■■■■■                                  ┃                                        ", "┃                                  ■■■■■■■■■■                                  ┃                                        ", "┃                                  ■■■■■■■■■■                                  ┃                                        ", "┃                                  ■■■■■■■■■■                                  ┃                                        ", "┃                                  ■■■■■■■■■■                                  ┃                                        ", "┃                                  ■■■■■■■■■■                                  ┃                                        ", "┃                                  ■■■■■■■■■■                                  ┃                                        ", "┃                                  ■■■■■■■■■■                                  ┃                                        ", "┃                                  ■■■■■■■■■■                                  ┃                                        ", "┃                                  ■■■■■■■■■■                                  ┃                                        ", "┃                                                                              ┃                                        ", "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛                                        "
         ]);
 
         let mut buf = Buffer::empty(Rect::new(0, 0, expected.area.width, expected.area.height));
 
-        app.render(buf.area, &mut buf);
+        help.render(help_area, &mut buf);
+        input.render(input_area, &mut buf);
+        app.render(board_area, &mut buf);
 
         assert_eq!(buffer_to_string(&buf), buffer_to_string(&expected));
     }
