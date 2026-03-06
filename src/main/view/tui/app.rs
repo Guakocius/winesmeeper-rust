@@ -177,43 +177,43 @@ impl App {
             ),
             InputMode::Help => (
                 vec![
-                    "Esc".blue().bold(),
-                    ": go back".into(),
+                    "Go back".into(),
+                    " <Esc> ".blue().bold(),
                 ],
                 Style::default(),
             ),
             InputMode::Generate => (
                 vec![
-                    "Esc".blue().bold(),
-                    ": go back".into(),
+                    "Go back".into(),
+                    " <Esc> ".blue().bold(),
                 ],
                 Style::default(),
             ),
             InputMode::Save => (
                 vec![
-                    "Esc".blue().bold(),
-                    ": go back".into(),
+                    "Go back".into(),
+                    " <Esc> ".blue().bold(),
                 ],
                 Style::default(),
             ),
             InputMode::Load => (
                 vec![
-                    "Esc".blue().bold(),
-                    ": go back".into(),
+                    "Go back".into(),
+                    " <Esc> ".blue().bold(),
                 ],
                 Style::default(),
             ),
             InputMode::Flag => (
                 vec![
-                    "Esc".blue().bold(),
-                    ": go back".into(),
+                    "Go back".into(),
+                    " <Esc> ".blue().bold(),
                 ],
                 Style::default(),
             ),
             InputMode::Open => (
                 vec![
-                    "Esc".blue().bold(),
-                    ": go back".into(),
+                    "Go back".into(),
+                    " <Esc> ".blue().bold(),
                 ],
                 Style::default(),
             ),
@@ -227,12 +227,12 @@ impl App {
         let input = Paragraph::new(self.input.as_str())
             .style(match self.input_mode {
                 InputMode::Normal => Style::default(),
-                InputMode::Help => Style::default().fg(Color::Red),
+                InputMode::Help => Style::default().fg(Color::Green),
                 InputMode::Generate => Style::default().fg(Color::Yellow),
-                InputMode::Save => Style::default(),
-                InputMode::Load => Style::default(),
-                InputMode::Flag => Style::default(),
-                InputMode::Open => Style::default(),
+                InputMode::Save => Style::default().fg(Color::Magenta),
+                InputMode::Load => Style::default().fg(Color::LightMagenta),
+                InputMode::Flag => Style::default().fg(Color::LightRed),
+                InputMode::Open => Style::default().fg(Color::Blue),
             })
             .block(Block::bordered().title("Input"));
 
@@ -247,7 +247,10 @@ impl App {
                 | InputMode::Save 
                 | InputMode::Load 
                 | InputMode::Flag 
-                | InputMode::Open => todo!()
+                | InputMode::Open => frame.set_cursor_position(Position::new(
+                        input_area.x + self.character_index as u16 + 1,
+                        input_area.y + 1,
+            )),
         }
         
         frame.render_widget(self, board_area);
